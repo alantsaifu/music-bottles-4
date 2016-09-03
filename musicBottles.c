@@ -150,12 +150,16 @@ void handleButtons() {
 
 	if (MUSIC1_BTN == 0) {
 		setFiles(0);
+		lastSample+=9999;
 	} else if (MUSIC2_BTN == 0) {
 		setFiles(1);
+		lastSample+=9999;
 	} else if (MUSIC3_BTN == 0) {
 		setFiles(2);
+		lastSample+=9999;
 	} else if (MUSIC4_BTN == 0) {
 		setFiles(3);
+		lastSample+=9999;
 	} 
 
 }
