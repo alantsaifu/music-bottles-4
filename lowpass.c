@@ -56,7 +56,7 @@ void lowPassTest(const float alpha[],int n) {
     printf("%d",(long)reading[i]/100);
     printf(" ");
     printf(isStable?"*":" ");
-    
+      
     if (i<n-1) { printf("\t"); } else { printf("\n");}
   }
 }

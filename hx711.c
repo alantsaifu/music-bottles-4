@@ -66,10 +66,9 @@ long getCleanSample(int numSamples, int spread) {
 	long tmp_avg2;
 	long offset=0;
 	float filter_low, filter_high;
-	float spread_percent = SPREAD / 100.0 /2.0;
+	float spread_percent = spread / 100.0 /2.0;
 	int b;
-	int nsamples=N_SAMPLES;
-	long samples[nsamples];
+	long samples[numSamples];
 
 
 	while (j==0 && k<10) {
@@ -78,13 +77,13 @@ long getCleanSample(int numSamples, int spread) {
 		tmp_avg =0;
 	
 		// get the dirty samples and average them
-		for(i=0;i<nsamples;i++) {
+		for(i=0;i<numSamples;i++) {
 			samples[i] = read_value();
 			tmp_avg += samples[i];
 		}
 
 		//calculate dirty average
-		tmp_avg = tmp_avg / nsamples;
+		tmp_avg = tmp_avg / numSamples;
 
 		tmp_avg2 = 0;
 	
@@ -93,7 +92,7 @@ long getCleanSample(int numSamples, int spread) {
 		filter_low =  (float) tmp_avg * (1.0 - spread_percent);
 		filter_high = (float) tmp_avg * (1.0 + spread_percent);
 
-		for(i=0;i<nsamples;i++) {
+		for(i=0;i<numSamples;i++) {
 			if ((samples[i] <= filter_high && samples[i] >= filter_low) || 
 			    (samples[i] >= filter_high && samples[i] <= filter_low) ) {
 				tmp_avg2 += samples[i];

@@ -15,11 +15,6 @@
 #define SCK_OFF (GPIO_CLR0 = (1 << CLOCK_PIN))
 #define DT_R    (GPIO_IN0  & (1 << DATA_PIN))
 
-//Weight reading parameters
-#define N_SAMPLES	4
-#define SPREAD		4
-
-
 void 		   initHX711();
 float		   speedTest();
 long 		   getCleanSample(int numSamples, int spread);

@@ -4,5 +4,6 @@
 
 void initSound();
 void setFiles(int i);
+void rewindFiles();
 void play();
 void volume(int c, int v);
