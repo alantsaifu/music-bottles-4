@@ -51,10 +51,10 @@ void setBottleStates(int a, int b, int c) {
 	gpioWrite(BOT3_PIN,c<2);
 	gpioWrite(CAP3_PIN,c<1);
 	
-	//handle sounds
-	volume(0,(a==1)?96:0);
-	volume(1,(b==1)?96:0);
-	volume(2,(c==1)?96:0);
+	//handle sounds (max volume = 128, must be above 100 to play due to fade-out logic in audio.c)
+	(a==1)?volume(0,105):fadeOut(0);
+	(b==1)?volume(1,105):fadeOut(1);
+	(c==1)?volume(2,105):fadeOut(2);
 
 	//restart (and pause) current stream if all bottles are off
 	if (a==2 && b==2 && c==2) {
@@ -62,6 +62,8 @@ void setBottleStates(int a, int b, int c) {
 	}
 
 }
+
+int knownState = 0;
 
 void handleWeightChangeAbsolute(int weight) {
 	int i;
@@ -98,10 +100,15 @@ void handleWeightChangeAbsolute(int weight) {
 		  printf("\n");
 		} 
 	}
-	if (found==0) {
-		printf("!!!!!!!!! FOUND NO MATCHING SETTINGS !!!!!!!!!!!!\n");
-	} else if (found>1) {
-		printf("!!!!!!!!! FOUND MORE THAN ONE MATCHING SETTINGS !!!!!!!!!!!!\n");
+	if (found==1) {
+		knownState=1;
+	} else {
+		knownState=0;
+		if (found==0) {
+			printf("!!!!!!!!! FOUND NO MATCHING SETTINGS !!!!!!!!!!!!\n");
+		} else if (found>1) {
+			printf("!!!!!!!!! FOUND MORE THAN ONE MATCHING SETTINGS !!!!!!!!!!!!\n");
+		}
 	}
 
 }
@@ -211,6 +218,7 @@ int main(int argc, char **argv) {
 	while (1) {
 		handleScale();
 		handleButtons();
+		handleFade(); //in audio.c
 	}
 
 }

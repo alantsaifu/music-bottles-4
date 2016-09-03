@@ -137,12 +137,40 @@ void setFiles(int i) {
 	}
 }
 
-//TODO: enable fade in and out
+
+clock_t fadeClock;	
+int toFade[3] = {0,0,0};
+void handleFade() {
+//			vol = lastVol * 1-((float)(clock()-fadeClock))/CLOCKS_PER_SEC;
+
+	int i;
+	for (i = 0; i<3; i++) {
+		if (toFade[i]!=0) {
+			if (getVolume(i)<5) {
+				volume(i,0);
+				toFade[i]=0;
+			} else {
+				volume(i,getVolume(i)*0.96);
+			}
+		}
+	}
+}
+
+void fadeOut(int chan) {
+	toFade[chan] = 1;
+}
+
 void volume(int chan, int vol) {
-	if (vol!=0 && isPlaying==0) {
+	
+	if (vol>=100 && isPlaying==0 && toFade[chan]==0) {
 		play();
 	}
+
 	Mix_Volume(chan, vol);
+}
+
+int getVolume(int chan) {
+	return Mix_Volume(chan,-1);
 }
 
 void play() {
