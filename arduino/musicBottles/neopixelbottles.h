@@ -327,21 +327,8 @@ class NeoPatterns : public Adafruit_NeoPixel
     // Set all pixels to a color (synchronously)
     void ColorSet(uint32_t color)
     {
-      mid1 = numPixels()/3;
-      mid2 = numPixels()*2/3;
-
       for (int i = 0; i < numPixels(); i++)
       {
-        if (i<mid1) {
-          //only green
-          color &= 0xFF0000;
-        } else if (i<=mid2) {
-          //only red
-          color &= 0x00FF00;
-        } else {
-          //only blue
-          color &= 0x0000FF;
-        }
         setPixelColor(i, color);
       }
       show();
