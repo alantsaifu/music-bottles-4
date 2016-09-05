@@ -118,9 +118,9 @@ class NeoPatterns : public Adafruit_NeoPixel
     // Set all pixels to a color (synchronously)
     void ColorSet(uint32_t color)
     {
-      int mid1 = numPixels()*0.33;
+      int mid1 = floor(numPixels()*0.33);
       int mid2 = numPixels()-mid1;
-
+     
       for (int i = 0; i < numPixels(); i++)
       {
         uint32_t tc;
