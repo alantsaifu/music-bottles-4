@@ -8,8 +8,6 @@ enum  direction { FORWARD, REVERSE };
 
 void lightsComplete();
 
-StackList <uint32_t> ColorQueue;
-
 // NeoPattern Class - derived from the Adafruit_NeoPixel class
 class NeoPatterns : public Adafruit_NeoPixel
 {
@@ -329,8 +327,8 @@ class NeoPatterns : public Adafruit_NeoPixel
     // Set all pixels to a color (synchronously)
     void ColorSet(uint32_t color)
     {
-      mid1 = numPixels()/3;
-      mid2 = numPixels()*2/3;
+      int mid1 = numPixels()/3;
+      int mid2 = numPixels()*2/3;
 
       for (int i = 0; i < numPixels(); i++)
       {

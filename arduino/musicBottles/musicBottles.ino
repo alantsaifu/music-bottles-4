@@ -1,9 +1,8 @@
-#include <StackList.h>
 #include <Adafruit_NeoPixel.h>
 
 #define NeoPixelPin 10
 
-#include "neopixelbottles.h"
+#include "neopixelbottlesthirds.h"
 
 
 //NOTICE! Pins 2-7 are 'hard-coded' in a number of places in the code, do not change this!
