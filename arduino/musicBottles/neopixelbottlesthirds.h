@@ -41,32 +41,7 @@ class NeoPatterns : public Adafruit_NeoPixel
       if ((millis() - lastUpdate) > Interval) // time to update
       {
         lastUpdate = millis();
-        switch (ActivePattern)
-        {
-          case RAINBOW_CYCLE:
-            RainbowCycleUpdate();
-            break;
-          case COLOR_CYCLE:
-            ColorCycleUpdate();
-            break;
-          case RAINBOW_CYCLE_LIMIT:
-            RainbowCycleLimitUpdate();
-            break;
-          case THEATER_CHASE:
-            TheaterChaseUpdate();
-            break;
-          case COLOR_WIPE:
-            ColorWipeUpdate();
-            break;
-          case SCANNER:
-            ScannerUpdate();
-            break;
-          case FADE:
-            FadeUpdate();
-            break;
-          default:
-            break;
-        }
+        FadeUpdate();
       }
     }
 
@@ -114,182 +89,6 @@ class NeoPatterns : public Adafruit_NeoPixel
       }
     }
 
-    // Initialize for a RainbowCycle
-    void RainbowCycle(uint8_t interval, direction dir = FORWARD)
-    {
-      ActivePattern = RAINBOW_CYCLE;
-      Interval = interval;
-      TotalSteps = 255;
-      Index = 0;
-      Direction = dir;
-    }
-
-    // Update the Rainbow Cycle Pattern
-    void RainbowCycleUpdate()
-    {
-      for (int i = 0; i < numPixels(); i++)
-      {
-        setPixelColor(i, Wheel(((i * 256 / numPixels()) + Index) & 255));
-      }
-      show();
-      Increment();
-    }
-
-    // Initialize for a RainbowCycle
-    void RainbowCycleLimit(uint8_t interval, uint16_t limit, direction dir = FORWARD)
-    {
-      ActivePattern = RAINBOW_CYCLE_LIMIT;
-      Interval = interval;
-      TotalSteps = limit;
-      Index = 0;
-      Direction = dir;
-    }
-
-    // Update the Rainbow Cycle Pattern
-    void RainbowCycleLimitUpdate()
-    {
-      for (int i = 0; i < numPixels(); i++)
-      {
-        setPixelColor(i, Wheel(((i * (TotalSteps + 1) / numPixels()) + Index) & TotalSteps));
-      }
-      show();
-      Increment();
-    }
-
-    // Initialize for a RainbowCycle
-    void ColorCycle(uint32_t color1, uint32_t color2, uint32_t color3, uint8_t interval, uint16_t stepsSpeed, direction dir = FORWARD)
-    {
-      ActivePattern = COLOR_CYCLE;
-      Interval = interval;
-      TotalSteps = numPixels();
-      Index = 0;
-      PrevColor1 = Color1;
-      PrevColor2 = Color2;
-      PrevColor3 = Color3;
-      Color1 = color1;
-      Color2 = color2;
-      Color3 = color3;
-      Direction = dir;
-      Speed = stepsSpeed;
-    }
-
-    // Update the Rainbow Cycle Pattern
-    void ColorCycleUpdate()
-    {
-      // Calculate linear interpolation between Color1 and Color2
-      // Optimise order of operations to minimize truncation error
-      uint8_t red1 = ((Red(PrevColor1) * (TotalSteps - Index)) + (Red(Color1) * Index)) / Speed;
-      uint8_t green1 = ((Green(PrevColor1) * (TotalSteps - Index)) + (Green(Color1) * Index)) / Speed;
-      uint8_t blue1 = ((Blue(PrevColor1) * (TotalSteps - Index)) + (Blue(Color1) * Index)) / Speed;
-
-      uint8_t red2 = ((Red(PrevColor2) * (TotalSteps - Index)) + (Red(Color2) * Index)) / Speed;
-      uint8_t green2 = ((Green(PrevColor2) * (TotalSteps - Index)) + (Green(Color2) * Index)) / Speed;
-      uint8_t blue2 = ((Blue(PrevColor2) * (TotalSteps - Index)) + (Blue(Color2) * Index)) / Speed;
-
-      uint8_t red3 = ((Red(PrevColor3) * (TotalSteps - Index)) + (Red(Color3) * Index)) / Speed;
-      uint8_t green3 = ((Green(PrevColor3) * (TotalSteps - Index)) + (Green(Color3) * Index)) / Speed;
-      uint8_t blue3 = ((Blue(PrevColor3) * (TotalSteps - Index)) + (Blue(Color3) * Index)) / Speed;
-
-      for (int i = 0; i < numPixels(); i++)
-      {
-        if (i > Index && i <= numPixels() / 3.0 + Index) // Scan Pixel to the right
-        {
-          setPixelColor(i, Color(red1, green1, blue1));
-        }
-        else if (i > numPixels() / 3.0 + Index && i <= numPixels() * (2.0 / 3.0) + Index) // Scan Pixel to the left
-        {
-          setPixelColor(i, Color(red2, green2, blue2));
-        }
-        else // Fading tail
-        {
-          setPixelColor(i, Color(red3, green3, blue3));
-        }
-      }
-      show();
-      Increment();
-    }
-
-    // Initialize for a Theater Chase
-    void TheaterChase(uint32_t color1, uint32_t color2, uint8_t interval, direction dir = FORWARD)
-    {
-      ActivePattern = THEATER_CHASE;
-      Interval = interval;
-      TotalSteps = numPixels();
-      Color1 = color1;
-      Color2 = color2;
-      Index = 0;
-      Direction = dir;
-    }
-
-    // Update the Theater Chase Pattern
-    void TheaterChaseUpdate()
-    {
-      for (int i = 0; i < numPixels(); i++)
-      {
-        if ((i + Index) % 3 == 0)
-        {
-          setPixelColor(i, Color1);
-        }
-        else
-        {
-          setPixelColor(i, Color2);
-        }
-      }
-      show();
-      Increment();
-    }
-
-    // Initialize for a ColorWipe
-    void ColorWipe(uint32_t color, uint8_t interval, direction dir = FORWARD)
-    {
-      ActivePattern = COLOR_WIPE;
-      Interval = interval;
-      TotalSteps = numPixels();
-      Color1 = color;
-      Index = 0;
-      Direction = dir;
-    }
-
-    // Update the Color Wipe Pattern
-    void ColorWipeUpdate()
-    {
-      setPixelColor(Index, Color1);
-      show();
-      Increment();
-    }
-
-    // Initialize for a SCANNNER
-    void Scanner(uint32_t color1, uint8_t interval)
-    {
-      ActivePattern = SCANNER;
-      Interval = interval;
-      TotalSteps = (numPixels() - 1) * 2;
-      Color1 = color1;
-      Index = 0;
-    }
-
-    // Update the Scanner Pattern
-    void ScannerUpdate()
-    {
-      for (int i = 0; i < numPixels(); i++)
-      {
-        if (i == Index)  // Scan Pixel to the right
-        {
-          setPixelColor(i, Color1);
-        }
-        else if (i == TotalSteps - Index) // Scan Pixel to the left
-        {
-          setPixelColor(i, Color1);
-        }
-        else // Fading tail
-        {
-          setPixelColor(i, DimColor(getPixelColor(i)));
-        }
-      }
-      show();
-      Increment();
-    }
-
     // Initialize for a Fade
     void Fade(uint32_t color1, uint32_t color2, uint16_t steps, uint8_t interval, direction dir = FORWARD)
     {
@@ -316,32 +115,29 @@ class NeoPatterns : public Adafruit_NeoPixel
       Increment();
     }
 
-    // Calculate 50% dimmed version of a color (used by ScannerUpdate)
-    uint32_t DimColor(uint32_t color)
-    {
-      // Shift R, G and B components one bit to the right
-      uint32_t dimColor = Color(Red(color) >> 1, Green(color) >> 1, Blue(color) >> 1);
-      return dimColor;
-    }
-
     // Set all pixels to a color (synchronously)
     void ColorSet(uint32_t color)
     {
-      int mid1 = numPixels()/3;
-      int mid2 = numPixels()*2/3;
+      int mid1 = numPixels()*0.33;
+      int mid2 = numPixels()-mid1;
 
       for (int i = 0; i < numPixels(); i++)
       {
+        uint32_t tc;
         if (i<mid1) {
-          //only green
-          setPixelColor(i,Green(color));
+          //only green 
+          tc=Color(Red(color), 0, 0);
         } else if (i<=mid2) {
           //only red
-          setPixelColor(i,Red(color));
+          tc=Color(0, Green(color), 0);
         } else {
           //only blue
-          setPixelColor(i,Blue(color));
+          tc=Color(0, 0, Blue(color));
         }
+//        Serial.print(i);
+//        Serial.print(" ");
+//        Serial.println(tc);
+        setPixelColor(i,tc);
       }
       show();
     }
@@ -386,25 +182,14 @@ class NeoPatterns : public Adafruit_NeoPixel
     }
 };
 
-
-
 NeoPatterns lights(108, NeoPixelPin, NEO_RGBW + NEO_KHZ800, &lightsComplete);
-//Adafruit_NeoPixel strip = Adafruit_NeoPixel(144, NeoPixelPin, NEO_RGBW+NEO_KHZ800);
-
-bool bottle_added = false;
 
 static bool lightsRunning = false;
 static uint32_t nextLight = 0;
+
 // Completion Callback
 void lightsComplete()
 {
   lightsRunning = false;
   lights.Fade(lights.Color2, nextLight, 30, 5);
-//  //if a bottle was added - fade to white
-//  if (bottle_added || lights.ActivePattern == RAINBOW_CYCLE) {
-//    lights.Fade(lights.Color2, lights.Color(127, 127, 127), 100, 30);
-//  }
-//  else { // else, staty on the faded in color
-//    lights.Fade(lights.Color2, lights.Color2, 100, 30);
-//  }
 }

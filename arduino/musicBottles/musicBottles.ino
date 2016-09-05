@@ -26,7 +26,7 @@ void setup() {
 
   lights.begin();
  //  lights.RainbowCycle(100);
-  Serial.begin(115200);
+ // Serial.begin(115200);
 }
 
 void loop() {
