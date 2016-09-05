@@ -334,15 +334,14 @@ class NeoPatterns : public Adafruit_NeoPixel
       {
         if (i<mid1) {
           //only green
-          color &= 0xFF0000;
+          setPixelColor(i,Green(color));
         } else if (i<=mid2) {
           //only red
-          color &= 0x00FF00;
+          setPixelColor(i,Red(color));
         } else {
           //only blue
-          color &= 0x0000FF;
+          setPixelColor(i,Blue(color));
         }
-        setPixelColor(i, color);
       }
       show();
     }
