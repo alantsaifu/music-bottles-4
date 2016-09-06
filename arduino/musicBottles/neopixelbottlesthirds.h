@@ -1,155 +1,153 @@
 
 
 
-// Pattern types supported:
-enum  pattern { NONE, RAINBOW_CYCLE, THEATER_CHASE, COLOR_WIPE, SCANNER, FADE, COLOR_CYCLE, RAINBOW_CYCLE_LIMIT };
-// Patern directions supported:
-enum  direction { FORWARD, REVERSE };
 
 void lightsComplete();
 
+
 // NeoPattern Class - derived from the Adafruit_NeoPixel class
 class NeoPatterns : public Adafruit_NeoPixel
-{
+{                                
+  uint32_t bottle1MissingColor = Color(20,20,20);
+  uint32_t bottle1ClosedColor = Color(27,48,51);
+  uint32_t bottle1OpenColor1 = Color(57,48,51);
+  uint32_t bottle1OpenColor2 = Color(0,0,0);
+  
+  uint32_t bottle2MissingColor = Color(20,20,20);
+  uint32_t bottle2ClosedColor = Color(56,48,51);
+  uint32_t bottle2OpenColor1 = Color(56,78,51);
+  uint32_t bottle2OpenColor2 = Color(0,0,0);
+  
+  uint32_t bottle3MissingColor = Color(20,20,20);
+  uint32_t bottle3ClosedColor = Color(56,56,31);
+  uint32_t bottle3OpenColor1 = Color(56,56,61);
+  uint32_t bottle3OpenColor2 = Color(0,0,0);
+
+  uint32_t bottleColors[3][4] = { {bottle1MissingColor, bottle1ClosedColor, bottle1OpenColor1, bottle1OpenColor2},
+                                {bottle2MissingColor, bottle2ClosedColor, bottle2OpenColor1, bottle2OpenColor2},
+                                {bottle3MissingColor, bottle3ClosedColor, bottle3OpenColor1, bottle3OpenColor2}};
+
+  const int FLICKER_STEPS_MIN = 75;
+  const int FLICKER_STEPS_MAX = 400;
+  
+  const int BOTTLE_OFF = 0;
+  const int BOTTLE_ON_CLOSED = 1;
+  const int BOTTLE_ON_OPEN = 2;
+  
+  int bottleState[3];
+
+  bool areAllBottlesOff() {
+    return (bottleState[0] == BOTTLE_OFF 
+        && bottleState[1] == BOTTLE_OFF
+        && bottleState[2] == BOTTLE_OFF);
+  }
+
   public:
 
     // Member Variables:
-    pattern  ActivePattern;  // which pattern is running
-    direction Direction;     // direction to run the pattern
-
     unsigned long Interval;   // milliseconds between updates
     unsigned long lastUpdate; // last update of position
 
-    uint32_t Color1, Color2, Color3;  // What colors are in use
-    uint32_t PrevColor1, PrevColor2, PrevColor3;  // What colors are in use
-    uint16_t TotalSteps;  // total number of steps in the pattern
-    uint16_t Speed;
-    uint16_t Index;  // current step within the pattern
+    uint32_t Color1[3], Color2[3], ColorCurrent[3];  // What colors are in use
 
-    void (*OnComplete)();  // Callback on completion of pattern
+    uint16_t stepsDefault;
+    uint16_t TotalSteps[3];  // total number of steps in the patterns
+    uint16_t Index[3] = { 0, 0, 0};  // current step within each pattern
+    int splitPos[4]; //index for splitting strip to 3
 
     // Constructor - calls base-class constructor to initialize strip
-    NeoPatterns(uint16_t pixels, uint8_t pin, uint8_t type, void (*callback)())
+    NeoPatterns(uint16_t pixels, uint8_t pin, uint8_t type, uint16_t steps, uint8_t interval)
       : Adafruit_NeoPixel(pixels, pin, type)
     {
-      OnComplete = callback;
+      splitPos[0] = 0;
+      splitPos[1] = floor(numPixels()*0.33);
+      splitPos[2] = numPixels()-splitPos[1];
+      splitPos[3] = numPixels();
+
+      for (int i=0; i<3; i++) {
+        Color1[i] = Color(0,0,0);
+        Color2[i] = bottleColors[i][0];
+      }
+
+      Interval = interval;
+      
+      stepsDefault = steps;
+      for (int i=0; i<3; i++) {
+        TotalSteps[i] = steps;
+        Index[i] = 0;
+      }
     }
 
+    void setBottleStates(bool isBottleOn[], bool isCapOn[]) {
+        for (int i=0; i<3; i++) {
+          int oldState = bottleState[i];
+          int newState = ((isBottleOn[i])?((isCapOn[i])?BOTTLE_ON_CLOSED:BOTTLE_ON_OPEN):BOTTLE_OFF);
+
+          if (newState != oldState) {
+            bottleState[i] = newState; 
+            Color1[i] = ColorCurrent[i];
+            Color2[i] = bottleColors[i][newState];
+            Index[i] = 0;
+          }
+          
+        }        
+    }
+    
     // Update the pattern
     void Update()
     {
       if ((millis() - lastUpdate) > Interval) // time to update
       {
         lastUpdate = millis();
-        FadeUpdate();
+
+        // Calculate linear interpolation between Color1 and Color2
+        // Optimise order of operations to minimize truncation error
+
+        for (int i = 0; i<3; i++) {
+          uint8_t red = ((Red(Color1[i]) * (TotalSteps[i] - Index[i])) + (Red(Color2[i]) * Index[i])) / TotalSteps[i];
+          uint8_t green = ((Green(Color1[i]) * (TotalSteps[i] - Index[i])) + (Green(Color2[i]) * Index[i])) / TotalSteps[i];
+          uint8_t blue = ((Blue(Color1[i]) * (TotalSteps[i] - Index[i])) + (Blue(Color2[i]) * Index[i])) / TotalSteps[i];
+
+          ColorCurrent[i] =  Color(green, red, blue);
+          
+          ColorSet(splitPos[i], splitPos[i+1],ColorCurrent[i]);        
+        }
+        show();
+        Increment();
       }
     }
 
     // Increment the Index and reset at the end
     void Increment()
     {
-      if (Direction == FORWARD)
-      {
-        Index++;
-        if (Index >= TotalSteps)
+      for (int i = 0; i<3; i++) {
+        Index[i]++;
+        if (Index[i] >= TotalSteps[i])
         {
-          Index = 0;
-          if (OnComplete != NULL)
-          {
-            OnComplete(); // call the comlpetion callback
-          }
-        }
+          Index[i] = 0;
+          OnComplete(i); // call the comlpetion callback
+        }      
       }
-      else // Direction == REVERSE
-      {
-        --Index;
-        if (Index <= 0)
-        {
-          Index = TotalSteps - 1;
-          if (OnComplete != NULL)
-          {
-            OnComplete(); // call the comlpetion callback
-          }
-        }
-      }
-    }
-
-    // Reverse pattern direction
-    void Reverse()
-    {
-      if (Direction == FORWARD)
-      {
-        Direction = REVERSE;
-        Index = TotalSteps - 1;
-      }
-      else
-      {
-        Direction = FORWARD;
-        Index = 0;
-      }
-    }
-
-    // Initialize for a Fade
-    void Fade(uint32_t color1, uint32_t color2, uint16_t steps, uint8_t interval, direction dir = FORWARD)
-    {
-      ActivePattern = FADE;
-      Interval = interval;
-      TotalSteps = steps;
-      Color1 = color1;
-      Color2 = color2;
-      Index = 0;
-      Direction = dir;
-    }
-
-    // Update the Fade Pattern
-    void FadeUpdate()
-    {
-      // Calculate linear interpolation between Color1 and Color2
-      // Optimise order of operations to minimize truncation error
-      uint8_t red = ((Red(Color1) * (TotalSteps - Index)) + (Red(Color2) * Index)) / TotalSteps;
-      uint8_t green = ((Green(Color1) * (TotalSteps - Index)) + (Green(Color2) * Index)) / TotalSteps;
-      uint8_t blue = ((Blue(Color1) * (TotalSteps - Index)) + (Blue(Color2) * Index)) / TotalSteps;
-
-      ColorSet(Color(red, green, blue));
-      show();
-      Increment();
     }
 
     // Set all pixels to a color (synchronously)
-    void ColorSet(uint32_t color)
+    void ColorSet(int fromPixel, int toPixel, uint32_t color)
     {
-      int mid1 = floor(numPixels()*0.33);
-      int mid2 = numPixels()-mid1;
-     
-      for (int i = 0; i < numPixels(); i++)
+      for (int i = fromPixel; i < toPixel; i++)
       {
-        uint32_t tc;
-        if (i<mid1) {
-          //only green 
-          tc=Color(Red(color), 0, 0);
-        } else if (i<=mid2) {
-          //only red
-          tc=Color(0, Green(color), 0);
-        } else {
-          //only blue
-          tc=Color(0, 0, Blue(color));
-        }
-//        Serial.print(i);
-//        Serial.print(" ");
-//        Serial.println(tc);
-        setPixelColor(i,tc);
+        setPixelColor(i,color);
       }
-      show();
+      //show(); //<-- disabled, no need to show here, we do it after running all 3
     }
 
     // Returns the Red component of a 32-bit color
-    uint8_t Red(uint32_t color)
+    uint8_t Green(uint32_t color)
     {
       return (color >> 16) & 0xFF;
     }
 
     // Returns the Green component of a 32-bit color
-    uint8_t Green(uint32_t color)
+    uint8_t Red(uint32_t color)
     {
       return (color >> 8) & 0xFF;
     }
@@ -159,37 +157,30 @@ class NeoPatterns : public Adafruit_NeoPixel
     {
       return color & 0xFF;
     }
-
-    // Input a value 0 to 255 to get a color value.
-    // The colours are a transition r - g - b - back to r.
-    uint32_t Wheel(byte WheelPos)
+    
+    // Completion Callback
+    void OnComplete(int i)
     {
-      WheelPos = 255 - WheelPos;
-      if (WheelPos < 85)
-      {
-        return Color(255 - WheelPos * 3, 0, WheelPos * 3);
-      }
-      else if (WheelPos < 170)
-      {
-        WheelPos -= 85;
-        return Color(0, WheelPos * 3, 255 - WheelPos * 3);
-      }
-      else
-      {
-        WheelPos -= 170;
-        return Color(WheelPos * 3, 255 - WheelPos * 3, 0);
+      if (bottleState[i]==BOTTLE_ON_OPEN) {
+        TotalSteps[i] = random(FLICKER_STEPS_MIN, FLICKER_STEPS_MAX+1);
+
+        if (Color2[i] == bottleColors[i][BOTTLE_ON_OPEN]) {
+          Color2[i] = bottleColors[i][BOTTLE_ON_OPEN+1];
+          Color1[i] = bottleColors[i][BOTTLE_ON_OPEN];
+          Index[i] = 0;
+        } else {
+          Color1[i] = bottleColors[i][BOTTLE_ON_OPEN+1];
+          Color2[i] = bottleColors[i][BOTTLE_ON_OPEN];
+          Index[i] = 0;          
+        }
+      } else {
+        TotalSteps[i] = stepsDefault; //just int case -- revert back from flickering
+        //keep color constant
+        Color1[i]=Color2[i];
       }
     }
 };
 
-NeoPatterns lights(108, NeoPixelPin, NEO_RGBW + NEO_KHZ800, &lightsComplete);
+NeoPatterns lights(36/*108*/, NeoPixelPin, NEO_RGBW + NEO_KHZ800, 75, 2);
 
-static bool lightsRunning = false;
-static uint32_t nextLight = 0;
 
-// Completion Callback
-void lightsComplete()
-{
-  lightsRunning = false;
-  lights.Fade(lights.Color2, nextLight, 30, 5);
-}

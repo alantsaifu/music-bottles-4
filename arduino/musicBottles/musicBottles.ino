@@ -14,6 +14,7 @@
 #define SP_BOT ((PIND & 128) == 128)
 
 void setup() {
+  
   pinMode(2, INPUT_PULLUP);
   pinMode(3, INPUT_PULLUP);
   pinMode(4, INPUT_PULLUP);
@@ -25,48 +26,16 @@ void setup() {
   digitalWrite(11, HIGH);
 
   lights.begin();
- //  lights.RainbowCycle(100);
+
  // Serial.begin(115200);
+ // Serial.print("hello");
 }
 
 void loop() {
+  bool bottleStates[3] = { CO_BOT,ST_BOT,SP_BOT };
+  bool capStates[3] = {CO_CAP, ST_CAP, SP_CAP};
+  lights.setBottleStates( bottleStates , capStates );
   lights.Update();
- /* 
-  Serial.print();
-  Serial.print((PIND & 8) == 8);
-  Serial.print((PIND & 16) == 16);
-  Serial.print((PIND & 32) == 32);
-  Serial.print((PIND & 64) == 64);
-  Serial.println((PIND & 128) == 128);
- */
-  
-  int g = (CO_BOT) ? ((!CO_CAP) ? 255 : 90) : 30;
-  int r = (ST_BOT) ? ((!ST_CAP) ? 255 : 90) : 30;
-  int b = (SP_BOT) ? ((!SP_CAP) ? 255 : 90) : 30;
-
- 
-  //Serial.println(r);
-  if (!lightsRunning) {
-    /*
-    if (!bottleStates.cone.bottleOn && !bottleStates.straight.bottleOn && !bottleStates.sphere.bottleOn) {
-      fadeTo(C_WHITE);
-    } else if (bottleStates.cone.bottleOn && bottleStates.straight.bottleOn && bottleStates.sphere.bottleOn) {
-      fadeTo(C_DARKBLUE);     
-    } else if (bottleStates.cone.bottleOn && bottleStates.straight.bottleOn && bottleStates.sphere.bottleOn) {
-    
-    }*/
-    fadeTo(lights.Color(g,r,b));
-  }
-}
-
-void fadeTo(uint32_t c) {
-//    static uint32_t lastColor = lights.Color(127, 127, 127);
-//      lights.Fade(lastColor, c, 30, 5);
-//      lastColor = c;    
-   nextLight = c;
-   if (!lightsRunning) {
-     lights.Fade(lights.Color2, c, 90, 5);
-   } 
-   lightsRunning = true;
+   
 }
 
