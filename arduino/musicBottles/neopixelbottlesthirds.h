@@ -8,6 +8,24 @@ void lightsComplete();
 // NeoPattern Class - derived from the Adafruit_NeoPixel class
 class NeoPatterns : public Adafruit_NeoPixel
 {                                
+
+  /*
+   * 
+   * How to set bottle colors:
+   * 
+   * !!! Notice: Colors are in GRB, not RGB due to the type of strip in use.
+   * 
+   * Each bottle has 4 colors:
+   * 1) a color for when the bottle is missing.
+   * 2) a color for when the bottle is present, and closed.
+   * 3) a color to fade to when opened
+   * 4) a color to 'flicker' to/from while opened. 
+   * 
+   * Flickering will occur between #3 and #4 (as defined above).
+   * 
+   * To control the flickering speed, you can set a minimum/maximum by setting FLICKER_STEPS_MIN and FLICKER_STEPS_MAX respectively.
+   * 
+   */
   uint32_t bottle1MissingColor = Color(20,20,20);
   uint32_t bottle1ClosedColor = Color(27,48,51);
   uint32_t bottle1OpenColor1 = Color(57,48,51);
