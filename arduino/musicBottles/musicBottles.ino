@@ -4,11 +4,11 @@
 #define NeoPixelPin 10
 
 //NOTICE! Pins 2-7 are 'hard-coded' in a number of places in the code, do not change this!
-#define CO_CAP ((PIND & 4) != 4)
+#define CO_CAP ((PIND & 4) == 4)
 #define CO_BOT ((PIND & 8) == 8)
-#define ST_CAP ((PIND & 16) != 16)
+#define ST_CAP ((PIND & 16) == 16)
 #define ST_BOT ((PIND & 32) == 32)
-#define SP_CAP ((PIND & 64) != 64)
+#define SP_CAP ((PIND & 64) == 64)
 #define SP_BOT ((PIND & 128) == 128)
 
 BottleNeoPatterns lights(108, NeoPixelPin, NEO_RGBW + NEO_KHZ800, 75, 2);
