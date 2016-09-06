@@ -1,18 +1,8 @@
 
-
-
-
-void lightsComplete();
-
-
-// NeoPattern Class - derived from the Adafruit_NeoPixel class
-class NeoPatterns : public Adafruit_NeoPixel
+class BottleNeoPatterns : public Adafruit_NeoPixel
 {                                
-
-  /*
-   * 
-   * How to set bottle colors:
-   * 
+  /* How to set bottle colors:
+   * ------------------------
    * !!! Notice: Colors are in GRB, not RGB due to the type of strip in use.
    * 
    * Each bottle has 4 colors:
@@ -74,7 +64,7 @@ class NeoPatterns : public Adafruit_NeoPixel
     int splitPos[4]; //index for splitting strip to 3
 
     // Constructor - calls base-class constructor to initialize strip
-    NeoPatterns(uint16_t pixels, uint8_t pin, uint8_t type, uint16_t steps, uint8_t interval)
+    BottleNeoPatterns(uint16_t pixels, uint8_t pin, uint8_t type, uint16_t steps, uint8_t interval)
       : Adafruit_NeoPixel(pixels, pin, type)
     {
       splitPos[0] = 0;
@@ -106,8 +96,7 @@ class NeoPatterns : public Adafruit_NeoPixel
             Color1[i] = ColorCurrent[i];
             Color2[i] = bottleColors[i][newState];
             Index[i] = 0;
-          }
-          
+          }       
         }        
     }
     
@@ -118,16 +107,12 @@ class NeoPatterns : public Adafruit_NeoPixel
       {
         lastUpdate = millis();
 
-        // Calculate linear interpolation between Color1 and Color2
-        // Optimise order of operations to minimize truncation error
-
         for (int i = 0; i<3; i++) {
           uint8_t red = ((Red(Color1[i]) * (TotalSteps[i] - Index[i])) + (Red(Color2[i]) * Index[i])) / TotalSteps[i];
           uint8_t green = ((Green(Color1[i]) * (TotalSteps[i] - Index[i])) + (Green(Color2[i]) * Index[i])) / TotalSteps[i];
           uint8_t blue = ((Blue(Color1[i]) * (TotalSteps[i] - Index[i])) + (Blue(Color2[i]) * Index[i])) / TotalSteps[i];
 
-          ColorCurrent[i] =  Color(green, red, blue);
-          
+          ColorCurrent[i] =  Color(green, red, blue);          
           ColorSet(splitPos[i], splitPos[i+1],ColorCurrent[i]);        
         }
         show();
@@ -139,8 +124,7 @@ class NeoPatterns : public Adafruit_NeoPixel
     void Increment()
     {
       for (int i = 0; i<3; i++) {
-        Index[i]++;
-        if (Index[i] >= TotalSteps[i])
+        if (++Index[i] >= TotalSteps[i])
         {
           Index[i] = 0;
           OnComplete(i); // call the comlpetion callback
@@ -148,40 +132,24 @@ class NeoPatterns : public Adafruit_NeoPixel
       }
     }
 
-    // Set all pixels to a color (synchronously)
+    // Set all pixels to a color (synchronously). NOTICE: this does not call show() anymore - handled by outside loop.
     void ColorSet(int fromPixel, int toPixel, uint32_t color)
     {
       for (int i = fromPixel; i < toPixel; i++)
       {
         setPixelColor(i,color);
       }
-      //show(); //<-- disabled, no need to show here, we do it after running all 3
     }
 
-    // Returns the Red component of a 32-bit color
-    uint8_t Green(uint32_t color)
-    {
-      return (color >> 16) & 0xFF;
-    }
-
-    // Returns the Green component of a 32-bit color
-    uint8_t Red(uint32_t color)
-    {
-      return (color >> 8) & 0xFF;
-    }
-
-    // Returns the Blue component of a 32-bit color
-    uint8_t Blue(uint32_t color)
-    {
-      return color & 0xFF;
-    }
+    uint8_t Green(uint32_t color) { return (color >> 16) & 0xFF; }
+    uint8_t Red(uint32_t color) { return (color >> 8) & 0xFF; }
+    uint8_t Blue(uint32_t color) { return color & 0xFF; }
     
     // Completion Callback
     void OnComplete(int i)
     {
       if (bottleState[i]==BOTTLE_ON_OPEN) {
         TotalSteps[i] = random(FLICKER_STEPS_MIN, FLICKER_STEPS_MAX+1);
-
         if (Color2[i] == bottleColors[i][BOTTLE_ON_OPEN]) {
           Color2[i] = bottleColors[i][BOTTLE_ON_OPEN+1];
           Color1[i] = bottleColors[i][BOTTLE_ON_OPEN];
@@ -193,12 +161,8 @@ class NeoPatterns : public Adafruit_NeoPixel
         }
       } else {
         TotalSteps[i] = stepsDefault; //just int case -- revert back from flickering
-        //keep color constant
-        Color1[i]=Color2[i];
+        Color1[i]=Color2[i]; //keep color constant
       }
     }
 };
-
-NeoPatterns lights(36/*108*/, NeoPixelPin, NEO_RGBW + NEO_KHZ800, 75, 2);
-
 
